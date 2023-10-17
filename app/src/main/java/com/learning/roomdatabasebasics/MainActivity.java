@@ -69,6 +69,15 @@ public class MainActivity extends AppCompatActivity {
                 //get the value the user inputs in age EditText
                 String age = ageEdit.getText().toString();
 
+                //When we click save button it creates a new person object,
+                //the arguments are from the name and age variables which represents
+                //data from corresponding EditText
+                Person p1 = new Person(name, age);
+
+                //The getPersonDAO is a method which returns an instance of the PersonDAO interface.
+                //The addPerson method, as defined in the PersonDAO interface, is used to insert the p1 object into the database.
+                // It is a method that performs an "insert" operation in the database table associated with the Person entity, adding a new record with the provided person's data
+                personDB.getPersonDAO().addPerson(p1);
 
             }
         });
