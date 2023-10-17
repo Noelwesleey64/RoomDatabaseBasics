@@ -10,6 +10,10 @@ import android.os.Bundle;
 import android.view.View;
 import android.widget.Button;
 import android.widget.EditText;
+import android.widget.Toast;
+
+import java.util.ArrayList;
+import java.util.List;
 
 public class MainActivity extends AppCompatActivity {
 
@@ -22,6 +26,8 @@ public class MainActivity extends AppCompatActivity {
 
     //Declaring our Database containing person table
     PersonDatabase personDB;
+
+    List<Person> PersonList;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -81,6 +87,40 @@ public class MainActivity extends AppCompatActivity {
 
             }
         });
+
+        //displaying data after clicking get data
+        getDataButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                //Get all the records for person object from the database and store it on a list
+                PersonList = personDB.getPersonDAO().getAllPerson();
+
+                //StringBuilder is used for efficiently building strings, especially when you need to concatenate multiple strings together.
+                StringBuilder sb = new StringBuilder();
+
+                //this loop iterates over each person object in the PersonList
+                for(Person p : PersonList){
+
+                      //Inside the loop, the code appends the name and age of each Person to the StringBuilder sb.
+                       sb.append(p.getName()+": " + p.getAge());
+
+                       //After each name and age entry, a newline character (\n) is appended to sb to separate each person's information on a new line.
+                       sb.append("\n");
+
+
+
+                }
+
+                //After the loop is finished, the StringBuilder content is converted to a single String, which is stored in the finalData variable.
+                String finalData = sb.toString();
+                //We create a toast message displaying th string
+                Toast.makeText(MainActivity.this, ""+finalData, Toast.LENGTH_SHORT).show();
+
+
+            }
+        });
+
+
 
 
 
