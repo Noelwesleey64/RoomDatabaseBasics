@@ -1,6 +1,10 @@
 package com.learning.roomdatabasebasics;
 
+import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.room.Room;
+import androidx.room.RoomDatabase;
+import androidx.sqlite.db.SupportSQLiteDatabase;
 
 import android.os.Bundle;
 import android.view.View;
@@ -9,11 +13,15 @@ import android.widget.EditText;
 
 public class MainActivity extends AppCompatActivity {
 
+
     //declaring itemViews
     EditText nameEdit;
     EditText ageEdit;
 
     Button saveButton, getDataButton;
+
+    //Declaring our Database containing person table
+    PersonDatabase personDB;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -25,6 +33,32 @@ public class MainActivity extends AppCompatActivity {
         ageEdit = findViewById(R.id.ageEdit);
         saveButton = findViewById(R.id.saveButton);
         getDataButton = findViewById(R.id.getDataButton);
+
+        //RoomDatabase.Callback is an abstract class provided by the Room Persistence Library in Android.
+        // It is used for defining callback methods that can be executed during various lifecycle events of the Room database,
+        // such as when the database is created, opened, or when it's populated with data.
+        //Inside the curly braces, you define an anonymous inner class. This means you're creating a subclass of RoomDatabase.Callback on the fly and
+        // providing implementations for its callback methods within the body of the anonymous inner class.
+        RoomDatabase.Callback myCallBack = new RoomDatabase.Callback() {
+            //This method is called when the database is created for the first time.
+            @Override
+            public void onCreate(@NonNull SupportSQLiteDatabase db) {
+                super.onCreate(db);
+            }
+
+            //This method is called when the database is opened.
+            @Override
+            public void onOpen(@NonNull SupportSQLiteDatabase db) {
+                super.onOpen(db);
+            }
+        };
+
+        //creating an instance of a Room database in an Android application
+        //.addCallback(myCallBack) this part of the line adds a callback to the database builder.
+        //This allows you to perform custom actions at those points, as defined in your callback.
+        // .build(): finalizes the creation of the Room database based on the provided configuration and returns an instance of the database.
+        //The resulting database instance is stored in the personDB variable
+        personDB = Room.databaseBuilder(getApplicationContext(), PersonDatabase.class, "PersonDB").addCallback(myCallBack).build();
 
         //setting an Onclick Listener to our save button
         saveButton.setOnClickListener(new View.OnClickListener() {
