@@ -1,4 +1,4 @@
-package com.learning.roomdatabasebasics;
+ package com.learning.roomdatabasebasics;
 
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
@@ -7,6 +7,8 @@ import androidx.room.RoomDatabase;
 import androidx.sqlite.db.SupportSQLiteDatabase;
 
 import android.os.Bundle;
+import android.os.Handler;
+import android.os.Looper;
 import android.view.View;
 import android.widget.Button;
 import android.widget.EditText;
@@ -14,6 +16,8 @@ import android.widget.Toast;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 
 public class MainActivity extends AppCompatActivity {
 
@@ -80,10 +84,9 @@ public class MainActivity extends AppCompatActivity {
                 //data from corresponding EditText
                 Person p1 = new Person(name, age);
 
-                //The getPersonDAO is a method which returns an instance of the PersonDAO interface.
-                //The addPerson method, as defined in the PersonDAO interface, is used to insert the p1 object into the database.
-                // It is a method that performs an "insert" operation in the database table associated with the Person entity, adding a new record with the provided person's data
-                personDB.getPersonDAO().addPerson(p1);
+                addPersonInBackground(p1);
+
+
 
             }
         });
@@ -92,29 +95,8 @@ public class MainActivity extends AppCompatActivity {
         getDataButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                //Get all the records for person object from the database and store it on a list
-                PersonList = personDB.getPersonDAO().getAllPerson();
 
-                //StringBuilder is used for efficiently building strings, especially when you need to concatenate multiple strings together.
-                StringBuilder sb = new StringBuilder();
-
-                //this loop iterates over each person object in the PersonList
-                for(Person p : PersonList){
-
-                      //Inside the loop, the code appends the name and age of each Person to the StringBuilder sb.
-                       sb.append(p.getName()+": " + p.getAge());
-
-                       //After each name and age entry, a newline character (\n) is appended to sb to separate each person's information on a new line.
-                       sb.append("\n");
-
-
-
-                }
-
-                //After the loop is finished, the StringBuilder content is converted to a single String, which is stored in the finalData variable.
-                String finalData = sb.toString();
-                //We create a toast message displaying th string
-                Toast.makeText(MainActivity.this, ""+finalData, Toast.LENGTH_SHORT).show();
+                 getPersonListInBackground();
 
 
             }
@@ -124,5 +106,97 @@ public class MainActivity extends AppCompatActivity {
 
 
 
+    }
+
+    //This function is responsible for adding a Person object to the database in a background thread to avoid blocking the main UI thread
+    public void addPersonInBackground(Person person){
+        //create a single-threaded ExecutorService to manage background tasks.
+        //It creates an ExecutorService with a single background thread, ensuring that database operations do not block the main UI thread.
+        ExecutorService executorService = Executors.newSingleThreadExecutor();
+
+        // is creating a Handler object associated with the main (UI) thread's Looper.
+        //Looper is a class in Android that manages message processing within a thread.
+        //Looper.getMainLooper() retrieves the Looper for the main thread.
+        //A Handler is a class that is used to communicate between background threads and the main (UI) thread in Android.
+        // It allows you to post Runnable objects for execution on the main thread.
+
+
+        Handler handler = new Handler(Looper.getMainLooper());
+
+        //he Handler is used to post a Runnable on the main thread once the background database operation is complete.
+       //This code starts the execution of a background task using an ExecutorService.
+        executorService.execute(new Runnable() {
+            //his method contains the code that will be executed in the background thread.
+            @Override
+            public void run() {
+                //background task
+                //The getPersonDAO is a method which returns an instance of the PersonDAO interface.
+                //The addPerson method, as defined in the PersonDAO interface, is used to insert the p1 object into the database.
+                // It is a method that performs an "insert" operation in the database table associated with the Person entity, adding a new record with the provided person's data
+
+                personDB.getPersonDAO().addPerson(person);
+
+                //on finishing task
+                //After the database operation is completed, this code posts a new Runnable to a handler.
+                //he handler is typically used to perform actions on the main (UI) thread from a background thread.
+               //In this case, it is used to show a toast message.
+                handler.post(new Runnable() {
+                    @Override
+                    public void run() {
+                        Toast.makeText(MainActivity.this, "Added to Database", Toast.LENGTH_SHORT).show();
+
+                    }
+                });
+            }
+        });
+    }
+// this code asynchronously retrieves a list of Person records from a database in the background,
+// formats this data into a readable string,
+// and then displays it as a toast message on the main UI thread.
+    public void getPersonListInBackground(){
+        //It creates an ExecutorService with a single thread. This service is responsible for executing tasks in the background.
+        ExecutorService executorService = Executors.newSingleThreadExecutor();
+
+        //It creates a Handler associated with the main (UI) thread.
+        Handler handler = new Handler(Looper.getMainLooper());
+
+        //It submits a background task to the ExecutorService
+        executorService.execute(new Runnable() {
+            @Override
+            public void run() {
+                //background task
+                //Get all the records for person object from the database and store it on a list
+                PersonList = personDB.getPersonDAO().getAllPerson();
+
+                //on finishing task
+                //After finishing the database operation, it posts a new task on the main thread
+                handler.post(new Runnable() {
+                    @Override
+                    public void run() {
+                        //StringBuilder is used for efficiently building strings, especially when you need to concatenate multiple strings together.
+                        StringBuilder sb = new StringBuilder();
+
+                        //this loop iterates over each person object in the PersonList
+                        for(Person p : PersonList){
+
+                            //Inside the loop, the code appends the name and age of each Person to the StringBuilder sb.
+                            sb.append(p.getName()+": " + p.getAge());
+
+                            //After each name and age entry, a newline character (\n) is appended to sb to separate each person's information on a new line.
+                            sb.append("\n");
+
+
+
+                        }
+
+                        //After the loop is finished, the StringBuilder content is converted to a single String, which is stored in the finalData variable.
+                        String finalData = sb.toString();
+                        //We create a toast message displaying th string
+                        Toast.makeText(MainActivity.this, ""+finalData, Toast.LENGTH_SHORT).show();
+
+                    }
+                });
+            }
+        });
     }
 }
